@@ -2,11 +2,11 @@
 
 Herramienta local para comparar percepciones fiscales (CABA y Provincia de Buenos Aires) contra el sistema contable.
 
-## Requisitos
+### Requisitos
 
 - Go 1.24+
 
-## Cómo correr
+### Cómo correr
 
 Desde la raíz del repositorio:
 
@@ -16,13 +16,13 @@ go run ./pkg/cmd/server/
 
 Luego abrir http://localhost:8080 en el navegador.
 
-## Cómo correr los tests
+### Cómo correr los tests
 
 ```bash
 go test ./...
 ```
 
-## Archivos de entrada
+### Archivos de entrada
 
 | Archivo | Formato | Columnas relevantes |
 |---------|---------|-------------------|
@@ -32,14 +32,14 @@ go test ./...
 
 Solo se procesan filas del sistema con jurisdicción `901` (CABA) o `902` (BsAs).
 
-## Archivo de salida
+### Archivo de salida
 
 El resultado es un `.xlsx` con:
 
 - **Hoja `Comparacion`**: todas las filas fiscales con columna `Coincide` (`SI`/`NO`).
 - **Hoja `Sistema sin match`** *(si aplica)*: filas del sistema sin fila fiscal equivalente.
 
-## Estructura del proyecto
+### Estructura del proyecto
 
 ```
 pkg/
