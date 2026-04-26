@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comparador de Percepciones</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8;
+      color: #2d3748;
+      min-height: 100vh;
+      padding: 40px 16px 60px;
+    }
+
+    .container { max-width: 680px; margin: 0 auto; }
+
+    header { margin-bottom: 32px; }
+    header h1 { font-size: 1.6rem; font-weight: 700; color: #1a202c; }
+    header p  { margin-top: 6px; font-size: 0.9rem; color: #718096; }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #a0aec0;
+      margin-bottom: 16px;
+    }
+
+    .upload-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f7fafc;
+    }
+    .upload-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .upload-row:first-of-type { padding-top: 0; }
+
+    .upload-label strong { display: block; font-size: 0.875rem; font-weight: 500; }
+    .upload-label span   { font-size: 0.75rem; color: #a0aec0; margin-top: 2px; display: block; }
+
+    .file-pick { position: relative; overflow: hidden; flex-shrink: 0; }
+    .file-pick input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 100px;
+    }
+    .file-pick-btn {
+      padding: 6px 14px; font-size: 0.8rem;
+      border: 1px solid #cbd5e0; border-radius: 6px;
+      background: #f7fafc; color: #4a5568; cursor: pointer;
+      white-space: nowrap; user-select: none;
+    }
+    .file-pick:hover .file-pick-btn { background: #edf2f7; border-color: #a0aec0; }
+
+    .file-badge {
+      font-size: 0.78rem; color: #a0aec0;
+      max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; text-align: right;
+    }
+    .file-badge.ok { color: #38a169; font-weight: 500; }
+
+    .actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+    .btn {
+      padding: 10px 24px; border: none; border-radius: 7px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-primary { background: #3b82f6; color: #fff; }
+    .btn-primary:not(:disabled):hover { background: #2563eb; }
+
+    .btn-download { background: #10b981; color: #fff; display: none; }
+    .btn-download:not(:disabled):hover { background: #059669; }
+    .btn-download.visible { display: inline-block; }
+
+    .status {
+      margin-top: 16px; padding: 14px 16px; border-radius: 8px;
+      font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;
+      word-break: break-word; display: none;
+    }
+    .status.info    { display: block; background: #ebf8ff; border: 1px solid #bee3f8; color: #2b6cb0; }
+    .status.success { display: block; background: #f0fff4; border: 1px solid #9ae6b4; color: #276749; }
+    .status.error   { display: block; background: #fff5f5; border: 1px solid #fed7d7; color: #c53030; }
+    .status.warning { display: block; background: #fffff0; border: 1px solid #faf089; color: #744210; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Comparador de Percepciones</h1>
+    <p>Comparación de percepciones fiscales (CABA y Provincia de Buenos Aires) contra sistema contable</p>
+  </header>
+
+  <div class="card">
+    <div class="card-title">Archivos de entrada</div>
+
+    <div class="upload-row">
+      <div class="upload-label">
+        <strong>Percepciones CABA</strong>
+        <span>Jurisdicción 901 · cols A=CUIT, F=Fecha, J=Importe</span>
+      </div>
+      <div class="file-pick">
+        <input type="file" id="fileCaba" accept=".xlsx">
+        <div class="file-pick-btn">Seleccionar</div>
+      </div>
+      <div class="file-badge" id="nameCaba">Sin archivo</div>
+    </div>
+
+    <div class="upload-row">
+      <div class="upload-label">
+        <strong>Percepciones Prov. Buenos Aires</strong>
+        <span>Jurisdicción 902 · cols A=CUIT, B=Fecha, K=Importe</span>
+      </div>
+      <div class="file-pick">
+        <input type="file" id="fileBsas" accept=".xlsx">
+        <div class="file-pick-btn">Seleccionar</div>
+      </div>
+      <div class="file-badge" id="nameBsas">Sin archivo</div>
+    </div>
+
+    <div class="upload-row">
+      <div class="upload-label">
+        <strong>Sistema Contable</strong>
+        <span>Col 0=Jur · 1=CUIT · 2=Fecha · 7=Importe percibido</span>
+      </div>
+      <div class="file-pick">
+        <input type="file" id="fileSistema" accept=".xlsx">
+        <div class="file-pick-btn">Seleccionar</div>
+      </div>
+      <div class="file-badge" id="nameSistema">Sin archivo</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="btnComparar">Comparar</button>
+    <button class="btn btn-download" id="btnDescargar">&#x2B07; Descargar resultado</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+</div>
+
+<script src="wasm_exec.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const inputs   = { caba: id('fileCaba'), bsas: id('fileBsas'), sistema: id('fileSistema') };
+  const badges   = { caba: id('nameCaba'), bsas: id('nameBsas'), sistema: id('nameSistema') };
+  const btnCmp   = id('btnComparar');
+  const btnDl    = id('btnDescargar');
+  const statusEl = id('status');
+
+  let resultBlob     = null;
+  let resultFilename = 'comparacion_percepciones.xlsx';
+  let wasmReady      = false;
+
+  function id(x) { return document.getElementById(x); }
+
+  function showStatus(type, msg) {
+    statusEl.className = 'status ' + type;
+    statusEl.textContent = msg;
+  }
+
+  function resetResult() {
+    resultBlob = null;
+    btnDl.classList.remove('visible');
+    statusEl.className = 'status';
+    statusEl.textContent = '';
+  }
+
+  // ---- Load WASM ----
+  (async function loadWasm() {
+    try {
+      const go = new Go();
+      const result = await WebAssembly.instantiateStreaming(fetch('comparador.wasm'), go.importObject);
+      go.run(result.instance);
+      wasmReady = true;
+    } catch (e) {
+      showStatus('error', 'Error cargando el motor de comparación: ' + e.message);
+    }
+  })();
+
+  // ---- File selection ----
+  Object.keys(inputs).forEach(key => {
+    inputs[key].addEventListener('change', e => {
+      const file = e.target.files[0];
+      badges[key].textContent = file ? file.name : 'Sin archivo';
+      badges[key].classList.toggle('ok', !!file);
+      resetResult();
+    });
+  });
+
+  // ---- Compare ----
+  btnCmp.addEventListener('click', async () => {
+    resetResult();
+
+    if (!wasmReady) {
+      showStatus('error', 'El motor de comparación aún está cargando. Esperá un momento e intentá de nuevo.');
+      return;
+    }
+
+    const missing = [];
+    if (!inputs.caba.files[0])    missing.push('Percepciones CABA');
+    if (!inputs.bsas.files[0])    missing.push('Percepciones Prov. Buenos Aires');
+    if (!inputs.sistema.files[0]) missing.push('Sistema Contable');
+
+    if (missing.length) {
+      showStatus('error', 'Faltan los siguientes archivos:\n• ' + missing.join('\n• '));
+      return;
+    }
+
+    btnCmp.disabled = true;
+    showStatus('info', 'Procesando...');
+
+    try {
+      const [bufCaba, bufBsas, bufSistema] = await Promise.all([
+        inputs.caba.files[0].arrayBuffer(),
+        inputs.bsas.files[0].arrayBuffer(),
+        inputs.sistema.files[0].arrayBuffer(),
+      ]);
+
+      // comparePercepciones is registered by the WASM module
+      const result = comparePercepciones(
+        new Uint8Array(bufCaba),
+        new Uint8Array(bufBsas),
+        new Uint8Array(bufSistema)
+      );
+
+      if (result.error) {
+        showStatus('error', result.error);
+        return;
+      }
+
+      resultBlob = new Blob([result.xlsx], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      resultFilename = `comparacion_percepciones_${today()}.xlsx`;
+
+      const warnings = Array.from({ length: result.warnings.length }, (_, i) => result.warnings[i]);
+      let msg = 'Comparación completada exitosamente.';
+      if (warnings.length) {
+        msg += `\n\nAdvertencias (${warnings.length}):\n` + warnings.slice(0, 8).join('\n');
+        if (warnings.length > 8) msg += `\n... y ${warnings.length - 8} más`;
+        showStatus('warning', msg);
+      } else {
+        showStatus('success', msg);
+      }
+
+      btnDl.classList.add('visible');
+
+    } catch (e) {
+      showStatus('error', e.message);
+    } finally {
+      btnCmp.disabled = false;
+    }
+  });
+
+  // ---- Download ----
+  btnDl.addEventListener('click', () => {
+    if (!resultBlob) return;
+    const url = URL.createObjectURL(resultBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = resultFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  function today() {
+    return new Date().toISOString().slice(0, 10);
+  }
+})();
+</script>
+</body>
+</html>
